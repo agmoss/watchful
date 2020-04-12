@@ -1,5 +1,6 @@
-import axios from 'axios'
+'use strict';
 
+import axios from 'axios'
 
 async function getHttpStatus(url) {
     try {
