@@ -5,6 +5,7 @@ import clear from 'clear';
 import figlet from 'figlet';
 import urlChecker from "./main";
 import Table from 'cli-table3';
+import logUpdate from 'log-update';
 
 
 const collectInputs = async (inputs = []) => {
@@ -43,16 +44,61 @@ export async function cli(args) {
     const urls = inputs.map(input => {
         return input.url
     })
-    const results = await urlChecker(urls);
 
     var table = new Table({
-        head: ['Url', 'Status'],
-        colWidths: [20, 10]
+        style: {
+            head: [],
+            border: []
+        }
     });
 
-    results.map(result => {
-        table.push(result)
-    })
 
-    console.log(table.toString());
+    const asyncIntervals = [];
+
+    const runAsyncInterval = async (cb, interval, intervalIndex) => {
+        await cb();
+        if (asyncIntervals[intervalIndex]) {
+            setTimeout(() => runAsyncInterval(cb, interval, intervalIndex), interval);
+        }
+    };
+
+    const setAsyncInterval = (cb, interval) => {
+        if (cb && typeof cb === "function") {
+            const intervalIndex = asyncIntervals.length;
+            asyncIntervals.push(true);
+            runAsyncInterval(cb, interval, intervalIndex);
+            return intervalIndex;
+        } else {
+            throw new Error('Callback must be a function');
+        }
+    };
+
+
+    const frames = ['-', '\\', '|', '/'];
+    let i = 0;
+
+    setAsyncInterval(async () => {
+
+        const frame = frames[i = ++i % frames.length];
+
+        let results = [];
+        table.length = 0;
+
+        table.push([{
+            colSpan: 2,
+            content: `${frame} TwoHundred ${frame}`
+        }])
+
+        table.push(['Url', 'Status'])
+
+        results = await urlChecker(urls);
+
+        results.map(result => {
+            table.push(result)
+        })
+
+        logUpdate(table.toString())
+
+    }, 1000);
+
 }
