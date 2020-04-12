@@ -1,4 +1,5 @@
 #!/usr/bin/env node
 
-require = require("esm")(module)
-module.exports = require("../src/cli").cli(process.argv)
+// eslint-disable-next-line no-global-assign
+require = require('esm')(module)
+module.exports = require('../src/cli').cli(process.argv)
