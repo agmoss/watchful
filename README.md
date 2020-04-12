@@ -1,4 +1,4 @@
-## twohundred
+## twohundred [![NPM Package](https://img.shields.io/npm/v/twohundred)](https://www.npmjs.com/package/twohundred)
 
 twohundred is a nodejs CLI for checking the HTTP status of Urls
 
