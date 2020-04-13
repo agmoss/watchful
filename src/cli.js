@@ -12,12 +12,6 @@ import marked from 'marked'
 import TerminalRenderer from 'marked-terminal'
 import axios from 'axios'
 
-/**
- * Determine if string is a valid url
- *
- * @param  {string} string string to evaluate
- * @return {boolean} true if valid url
- */
 const isValidUrl = (string) => {
   try {
     new URL(string)
@@ -30,12 +24,6 @@ const isValidUrl = (string) => {
   return true
 }
 
-/**
- * Get the HTTP status code of a url
- *
- * @param  {string} url Link to get status of
- * @return {number} HTTP status of the link
- */
 const getHttpStatus = async (url) => {
   try {
     const response = await axios.get(url)
@@ -51,12 +39,6 @@ const getHttpStatus = async (url) => {
   }
 }
 
-/**
- * Add two numbers together
- *
- * @param  {string[]} urls Links to check
- * @return {string[][]} results
- */
 const urlChecker = async (urls) => {
   const promises = urls.map(async url => {
     const status = await getHttpStatus(url)
@@ -66,12 +48,6 @@ const urlChecker = async (urls) => {
   return results
 }
 
-/**
- * Add two numbers together
- *
- * @param  {string[]} inputArgs cli args passed to the program
- * @return {Object} parsed opts
- */
 const getOpts = (inputArgs) => {
   const args = arg({
     '--man': Boolean,
@@ -84,12 +60,6 @@ const getOpts = (inputArgs) => {
   }
 }
 
-/**
- * Recursively get urls to test from the user
- *
- * @param  {string[]} [inputs=[]] cli args passed to the program
- * @return {{url:string}[]} input urls
- */
 const collectInputs = async (inputs = []) => {
   const prompt = {
     type: 'input',
@@ -109,13 +79,25 @@ const collectInputs = async (inputs = []) => {
   })
 }
 
+const header = () => {
+  console.log(
+    chalk.green(
+      figlet.textSync('Two Hundred', {
+        font: 'Standard',
+        horizontalLayout: 'controlled smushing',
+        verticalLayout: 'controlled smushing'
+      })
+    )
+  )
+}
+
 /**
  * Main
  *
- * @param  {string[]} args raw input to the program
- * @return {Promise<void>}
  */
 export async function cli (args) {
+  clear()
+
   const opts = getOpts(args)
 
   if (opts.man === true) {
@@ -125,15 +107,7 @@ export async function cli (args) {
       renderer: new TerminalRenderer()
     })
 
-    console.log(
-      chalk.green(
-        figlet.textSync('Two Hundred', {
-          font: 'Standard',
-          horizontalLayout: 'controlled smushing',
-          verticalLayout: 'controlled smushing'
-        })
-      )
-    )
+    header()
 
     console.log('')
 
@@ -147,15 +121,7 @@ export async function cli (args) {
 
   clear()
 
-  console.log(
-    chalk.green(
-      figlet.textSync('Two Hundred', {
-        font: 'Standard',
-        horizontalLayout: 'controlled smushing',
-        verticalLayout: 'controlled smushing'
-      })
-    )
-  )
+  header()
 
   console.log('Type "done" to proceed')
   console.log('')
@@ -166,13 +132,6 @@ export async function cli (args) {
 
   const urls = inputs.map(input => {
     return input.url
-  })
-
-  var table = new Table({
-    style: {
-      head: [],
-      border: []
-    }
   })
 
   const asyncIntervals = []
@@ -195,17 +154,44 @@ export async function cli (args) {
     }
   }
 
+  var table = new Table({
+    style: {
+      head: [],
+      border: [],
+      compact: false
+    },
+    wordWrap: false
+  })
+
   const frames = ['-', '\\', '|', '/']
+  const requestEvery = 60
+  const updateEvery = 0.1
   let i = 0
-  let results = []
-  results = await urlChecker(urls)
+  let x = 0
+  let j = requestEvery
+  let results = await urlChecker(urls)
+  let updating = true
 
   setAsyncInterval(async () => {
-    i++
-
-    const frame = frames[i % frames.length]
+    x++
+    const frame = frames[x % frames.length]
 
     table.length = 0
+
+    i += updateEvery
+    j -= updateEvery
+
+    if (Math.round(i) % requestEvery === 0) {
+      i = Math.ceil(i) + 1
+      updating = true
+      j = requestEvery
+
+      urlChecker(urls).then((done) => {
+        results = done
+      }).then(() => {
+        updating = false
+      })
+    }
 
     table.push([{
       colSpan: 2,
@@ -213,12 +199,13 @@ export async function cli (args) {
       hAlign: 'center'
     }])
 
-    table.push(['Url', 'Status'])
+    table.push([{
+      colSpan: 2,
+      content: `Next update: ${updating === true ? chalk.blue('now') : Math.round(j)}`,
+      hAlign: 'left'
+    }])
 
-    if (i % 60 === 0) {
-      results.length = 0
-      results = await urlChecker(urls)
-    }
+    table.push(['Url', 'Status'])
 
     results.map(result => {
       const url = result[0]
@@ -241,5 +228,5 @@ export async function cli (args) {
     })
 
     logUpdate(table.toString())
-  }, 500)
+  }, updateEvery * 1000)
 }
