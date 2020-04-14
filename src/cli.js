@@ -61,19 +61,32 @@ const getOpts = (inputArgs) => {
 }
 
 const collectInputs = async (inputs = []) => {
-  const prompt = {
+  const urlQuestion = {
     type: 'input',
     name: 'url',
     message: 'Enter a url to check: ',
     validate: isValidUrl
   }
 
-  const answer = await inquirer.prompt(prompt)
+  const answer = await inquirer.prompt(urlQuestion)
   const newInputs = [...inputs, answer]
 
   while (answer.url !== 'done') {
     return collectInputs(newInputs)
   }
+
+  const requestRateQuestion = {
+    type: 'list',
+    name: 'requestRate',
+    message: 'Request rate (minutes)',
+    choices: [1, 5, 10, 15, 30],
+    default: 1
+  }
+
+  const requestRate = await inquirer.prompt(requestRateQuestion)
+
+  newInputs.push(requestRate)
+
   return newInputs.filter(input => {
     return input.url !== 'done'
   })
@@ -130,9 +143,9 @@ export async function cli (args) {
 
   clear()
 
-  const urls = inputs.map(input => {
-    return input.url
-  })
+  const urls = inputs.filter(input => { return input.url }).map(opt => { return opt.url })
+
+  const requestRate = inputs.find(opt => { return opt.requestRate }).requestRate
 
   const asyncIntervals = []
 
@@ -164,7 +177,7 @@ export async function cli (args) {
   })
 
   const frames = ['-', '\\', '|', '/']
-  const requestEvery = 60
+  const requestEvery = requestRate * 60
   const updateEvery = 0.1
   let i = 0
   let x = 0
@@ -188,7 +201,6 @@ export async function cli (args) {
 
       urlChecker(urls).then((done) => {
         results = done
-      }).then(() => {
         updating = false
       })
     }
@@ -201,7 +213,7 @@ export async function cli (args) {
 
     table.push([{
       colSpan: 2,
-      content: `Next update: ${updating === true ? chalk.blue('now') : Math.round(j)}`,
+      content: `Next update: ${updating === true ? chalk.blue('now') : j > 60 ? Math.round(j / 60) + ' min' : Math.round(j)}`,
       hAlign: 'left'
     }])
 
