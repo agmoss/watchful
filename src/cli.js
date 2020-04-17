@@ -29,23 +29,22 @@ const getHttpStatus = async (url) => {
     const response = await axios.get(url)
     return response.status
   } catch (error) {
-    if (error.response) {
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-      return error.response.status
-    }
     throw new Error(`Could not get status of: ${url}`)
   }
 }
 
 const urlChecker = async (urls) => {
-  const promises = urls.map(async url => {
-    const status = await getHttpStatus(url)
-    return [url, status]
-  })
-  const results = await Promise.all(promises)
-  return results
+  try {
+    const promises = urls.map(async url => {
+      const status = await getHttpStatus(url)
+      return [url, status]
+    })
+    const results = await Promise.all(promises)
+    return results
+  } catch (error) {
+    console.log(error.message)
+    return process.exit(1)
+  }
 }
 
 const getOpts = (inputArgs) => {
@@ -143,9 +142,15 @@ export async function cli (args) {
 
   clear()
 
-  const urls = inputs.filter(input => { return input.url }).map(opt => { return opt.url })
+  const urls = inputs.filter(input => {
+    return input.url
+  }).map(opt => {
+    return opt.url
+  })
 
-  const requestRate = inputs.find(opt => { return opt.requestRate }).requestRate
+  const requestRate = inputs.find(opt => {
+    return opt.requestRate
+  }).requestRate
 
   const asyncIntervals = []
 
@@ -168,10 +173,22 @@ export async function cli (args) {
   }
 
   var table = new Table({
-    style: {
-      head: [],
-      border: [],
-      compact: false
+    chars: {
+      top: '',
+      'top-mid': '',
+      'top-left': '',
+      'top-right': '',
+      bottom: '',
+      'bottom-mid': '',
+      'bottom-left': '',
+      'bottom-right': '',
+      left: '',
+      'left-mid': '',
+      mid: '',
+      'mid-mid': '',
+      right: ' ',
+      'right-mid': '',
+      middle: ''
     },
     wordWrap: false
   })
@@ -213,11 +230,37 @@ export async function cli (args) {
 
     table.push([{
       colSpan: 2,
-      content: `Next update: ${updating === true ? chalk.blue('now') : j > 60 ? Math.round(j / 60) + ' min' : Math.round(j)}`,
-      hAlign: 'left'
+      content: '',
+      hAlign: 'center'
     }])
 
-    table.push(['Url', 'Status'])
+    table.push([{
+      colSpan: 1,
+      content: 'Next update:',
+      hAlign: 'left'
+    }, {
+      colSpan: 1,
+      content: `${updating === true ? chalk.blue('now') : j > 60 ? Math.round(j / 60) + ' min' : Math.round(j)}`,
+      hAlign: 'right'
+    }])
+
+    table.push([{
+      colSpan: 2,
+      content: '',
+      hAlign: 'center'
+    }])
+
+    table.push([{
+      colSpan: 1,
+      content: chalk.blue('Url'),
+      hAlign: 'left',
+      vAlign: 'top'
+    }, {
+      colSpan: 1,
+      content: chalk.blue('Status'),
+      hAlign: 'right',
+      vAlign: 'top'
+    }])
 
     results.map(result => {
       const url = result[0]
@@ -236,7 +279,17 @@ export async function cli (args) {
         // Server Error
         status = chalk.bgRed.black
       }
-      table.push([url, status])
+      table.push([{
+        colSpan: 1,
+        content: url,
+        hAlign: 'left',
+        vAlign: 'bottom'
+      }, {
+        colSpan: 1,
+        content: status,
+        hAlign: 'right',
+        vAlign: 'bottom'
+      }])
     })
 
     logUpdate(table.toString())
