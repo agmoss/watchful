@@ -1,23 +1,23 @@
-## twohundred [![NPM Package](https://img.shields.io/npm/v/twohundred)](https://www.npmjs.com/package/twohundred)
+## watchful [![NPM Package](https://img.shields.io/npm/v/watchful)](https://www.npmjs.com/package/watchful)
 
-twohundred is a nodejs CLI for checking the HTTP status of Urls
+watchful is a nodejs CLI for checking the HTTP status of Urls
 
 ## Installation
 
 ```bash
-npm install twohundred -g
+npm install watchful -g
 ```
 
 ## Usage
 
 ```bash
-twohundred
+watchful
 ```
 
 ### Help
 
 ```bash
-twohundred --man
+watchful --man
 ```
 
 ## License

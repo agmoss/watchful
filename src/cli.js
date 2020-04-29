@@ -94,7 +94,7 @@ const collectInputs = async (inputs = []) => {
 const header = () => {
   console.log(
     chalk.green(
-      figlet.textSync('Two Hundred', {
+      figlet.textSync('Watchful', {
         font: 'Standard',
         horizontalLayout: 'controlled smushing',
         verticalLayout: 'controlled smushing'
@@ -224,7 +224,7 @@ export async function cli (args) {
 
     table.push([{
       colSpan: 2,
-      content: `${frame} TwoHundred ${frame}`,
+      content: `${frame} Watchful ${frame}`,
       hAlign: 'center'
     }])
 

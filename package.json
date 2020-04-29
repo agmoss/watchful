@@ -1,14 +1,14 @@
 {
-  "name": "twohundred",
+  "name": "watchful",
   "version": "1.1.0",
   "main": "src/index.js",
   "module": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/agmoss/twohundred.git"
+    "url": "git+https://github.com/agmoss/watchful.git"
   },
   "bin": {
-    "twohundred": "bin/twohundred.js"
+    "watchful": "bin/watchful.js"
   },
   "scripts": {
     "lint": "eslint --fix --ext .js .",
