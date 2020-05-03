@@ -1,5 +1,3 @@
-'use strict'
-
 import fs from 'fs'
 import arg from 'arg'
 import inquirer from 'inquirer'
@@ -10,50 +8,19 @@ import Table from 'cli-table3'
 import logUpdate from 'log-update'
 import marked from 'marked'
 import TerminalRenderer from 'marked-terminal'
-import axios from 'axios'
 
-const isValidUrl = (string) => {
-  try {
-    new URL(string)
-  } catch (e) {
-    if (string === 'done') {
-      return true
-    }
-    throw new Error('Not a valid url')
-  }
-  return true
-}
-
-const getHttpStatus = async (url) => {
-  try {
-    const response = await axios.get(url)
-    return response.status
-  } catch (error) {
-    throw new Error(`Could not get status of: ${url}`)
-  }
-}
-
-const urlChecker = async (urls) => {
-  try {
-    const promises = urls.map(async url => {
-      const status = await getHttpStatus(url)
-      return [url, status]
-    })
-    const results = await Promise.all(promises)
-    return results
-  } catch (error) {
-    console.log(error.message)
-    return process.exit(1)
-  }
-}
+import { isValidUrl, urlChecker } from './url'
 
 const getOpts = (inputArgs) => {
-  const args = arg({
-    '--man': Boolean,
-    '-m': '--man'
-  }, {
-    argv: inputArgs.slice(2)
-  })
+  const args = arg(
+    {
+      '--man': Boolean,
+      '-m': '--man'
+    },
+    {
+      argv: inputArgs.slice(2)
+    }
+  )
   return {
     man: args['--man'] || false
   }
@@ -86,7 +53,7 @@ const collectInputs = async (inputs = []) => {
 
   newInputs.push(requestRate)
 
-  return newInputs.filter(input => {
+  return newInputs.filter((input) => {
     return input.url !== 'done'
   })
 }
@@ -142,13 +109,15 @@ export async function cli (args) {
 
   clear()
 
-  const urls = inputs.filter(input => {
-    return input.url
-  }).map(opt => {
-    return opt.url
-  })
+  const urls = inputs
+    .filter((input) => {
+      return input.url
+    })
+    .map((opt) => {
+      return opt.url
+    })
 
-  const requestRate = inputs.find(opt => {
+  const requestRate = inputs.find((opt) => {
     return opt.requestRate
   }).requestRate
 
@@ -222,47 +191,65 @@ export async function cli (args) {
       })
     }
 
-    table.push([{
-      colSpan: 2,
-      content: `${frame} Watchful ${frame}`,
-      hAlign: 'center'
-    }])
+    table.push([
+      {
+        colSpan: 2,
+        content: `${frame} Watchful ${frame}`,
+        hAlign: 'center'
+      }
+    ])
 
-    table.push([{
-      colSpan: 2,
-      content: '',
-      hAlign: 'center'
-    }])
+    table.push([
+      {
+        colSpan: 2,
+        content: '',
+        hAlign: 'center'
+      }
+    ])
 
-    table.push([{
-      colSpan: 1,
-      content: 'Next update:',
-      hAlign: 'left'
-    }, {
-      colSpan: 1,
-      content: `${updating === true ? chalk.blue('now') : j > 60 ? Math.round(j / 60) + ' min' : Math.round(j)}`,
-      hAlign: 'right'
-    }])
+    table.push([
+      {
+        colSpan: 1,
+        content: 'Next update:',
+        hAlign: 'left'
+      },
+      {
+        colSpan: 1,
+        content: `${
+          updating === true
+            ? chalk.blue('now')
+            : j > 60
+            ? Math.round(j / 60) + ' min'
+            : Math.round(j)
+        }`,
+        hAlign: 'right'
+      }
+    ])
 
-    table.push([{
-      colSpan: 2,
-      content: '',
-      hAlign: 'center'
-    }])
+    table.push([
+      {
+        colSpan: 2,
+        content: '',
+        hAlign: 'center'
+      }
+    ])
 
-    table.push([{
-      colSpan: 1,
-      content: chalk.blue('Url'),
-      hAlign: 'left',
-      vAlign: 'top'
-    }, {
-      colSpan: 1,
-      content: chalk.blue('Status'),
-      hAlign: 'right',
-      vAlign: 'top'
-    }])
+    table.push([
+      {
+        colSpan: 1,
+        content: chalk.blue('Url'),
+        hAlign: 'left',
+        vAlign: 'top'
+      },
+      {
+        colSpan: 1,
+        content: chalk.blue('Status'),
+        hAlign: 'right',
+        vAlign: 'top'
+      }
+    ])
 
-    results.map(result => {
+    results.map((result) => {
       const url = result[0]
       let status = result[1]
 
@@ -277,19 +264,22 @@ export async function cli (args) {
         status = chalk.red(status)
       } else {
         // Server Error
-        status = chalk.bgRed.black
+        status = chalk.bgRed.black(status)
       }
-      table.push([{
-        colSpan: 1,
-        content: url,
-        hAlign: 'left',
-        vAlign: 'bottom'
-      }, {
-        colSpan: 1,
-        content: status,
-        hAlign: 'right',
-        vAlign: 'bottom'
-      }])
+      table.push([
+        {
+          colSpan: 1,
+          content: url,
+          hAlign: 'left',
+          vAlign: 'bottom'
+        },
+        {
+          colSpan: 1,
+          content: status,
+          hAlign: 'right',
+          vAlign: 'bottom'
+        }
+      ])
     })
 
     logUpdate(table.toString())
