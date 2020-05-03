@@ -8,6 +8,8 @@ import Table from 'cli-table3'
 import logUpdate from 'log-update'
 import marked from 'marked'
 import TerminalRenderer from 'marked-terminal'
+import logSymbols from 'log-symbols'
+import figures from 'figures'
 
 import { isValidUrl, urlChecker } from './url'
 
@@ -70,6 +72,23 @@ const header = () => {
   )
 }
 
+const man = () => {
+  clear()
+
+  marked.setOptions({
+    renderer: new TerminalRenderer()
+  })
+
+  header()
+
+  console.log('')
+
+  fs.readFile('./README.md', 'utf8', function (err, data) {
+    if (err) throw err
+    console.log(marked(data))
+  })
+}
+
 /**
  * Main
  *
@@ -80,26 +99,11 @@ export async function cli (args) {
   const opts = getOpts(args)
 
   if (opts.man === true) {
-    clear()
-
-    marked.setOptions({
-      renderer: new TerminalRenderer()
-    })
-
-    header()
-
-    console.log('')
-
-    fs.readFile('./README.md', 'utf8', function (err, data) {
-      if (err) throw err
-      console.log(marked(data))
-    })
-
+    man()
     return
   }
 
   clear()
-
   header()
 
   console.log('Type "done" to proceed')
@@ -155,11 +159,11 @@ export async function cli (args) {
       'left-mid': '',
       mid: '',
       'mid-mid': '',
-      right: ' ',
+      right: '',
       'right-mid': '',
       middle: ''
     },
-    wordWrap: false
+    wordWrap: true
   })
 
   const frames = ['-', '\\', '|', '/']
@@ -193,7 +197,7 @@ export async function cli (args) {
 
     table.push([
       {
-        colSpan: 2,
+        colSpan: 4,
         content: `${frame} Watchful ${frame}`,
         hAlign: 'center'
       }
@@ -201,8 +205,8 @@ export async function cli (args) {
 
     table.push([
       {
-        colSpan: 2,
-        content: '',
+        colSpan: 4,
+        content: ' ',
         hAlign: 'center'
       }
     ])
@@ -214,7 +218,7 @@ export async function cli (args) {
         hAlign: 'left'
       },
       {
-        colSpan: 1,
+        colSpan: 2,
         content: `${
           updating === true
             ? chalk.blue('now')
@@ -228,8 +232,8 @@ export async function cli (args) {
 
     table.push([
       {
-        colSpan: 2,
-        content: '',
+        colSpan: 4,
+        content: ' ',
         hAlign: 'center'
       }
     ])
@@ -242,29 +246,38 @@ export async function cli (args) {
         vAlign: 'top'
       },
       {
-        colSpan: 1,
+        colSpan: 2,
         content: chalk.blue('Status'),
         hAlign: 'right',
         vAlign: 'top'
+      },
+      {
+        colSpan: 1,
+        content: ' '
       }
     ])
 
     results.map((result) => {
       const url = result[0]
       let status = result[1]
+      let symbol
 
       if (status >= 100 && status < 200) {
         // Informational
         status = chalk.bgWhite.black(status)
+        symbol = figures.info
       } else if (status >= 200 && status < 300) {
         // Success
         status = chalk.green(status)
+        symbol = logSymbols.success
       } else if (status >= 400 && status < 500) {
         // Client Error
         status = chalk.red(status)
+        symbol = logSymbols.error
       } else {
         // Server Error
         status = chalk.bgRed.black(status)
+        symbol = logSymbols.error
       }
       table.push([
         {
@@ -274,14 +287,17 @@ export async function cli (args) {
           vAlign: 'bottom'
         },
         {
-          colSpan: 1,
+          colSpan: 2,
           content: status,
-          hAlign: 'right',
-          vAlign: 'bottom'
+          hAlign: 'right'
+        },
+        {
+          colSpan: 1,
+          content: symbol,
+          hAlign: 'right'
         }
       ])
     })
-
     logUpdate(table.toString())
   }, updateEvery * 1000)
 }
